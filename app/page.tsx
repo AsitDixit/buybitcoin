@@ -1,113 +1,166 @@
-import Image from 'next/image'
+"use client";
+import Image from "next/image";
+import bitcoin from "./../bitcoin.json";
+import loading from "./../bit-loading.json"
+import success from "./../success.json"
+import {
+  Dialog,
+  DialogContent,
+  DialogDescription,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+  DialogClose,
+} from "@/components/ui/dialog";
+import { Button } from "@/components/ui/button";
+import { Input } from "@/components/ui/input";
+import Lottie from "lottie-react";
+import {
+  Form,
+  FormControl,
+  FormDescription,
+  FormField,
+  FormItem,
+  FormLabel,
+  FormMessage,
+} from "@/components/ui/form";
+import { TwitterTimelineEmbed, TwitterShareButton, TwitterFollowButton, TwitterHashtagButton, TwitterMentionButton, TwitterTweetEmbed, TwitterMomentShare, TwitterDMButton, TwitterVideoEmbed, TwitterOnAirButton } from 'react-twitter-embed';
+import { zodResolver } from "@hookform/resolvers/zod";
+import { useForm } from "react-hook-form";
+import * as z from "zod";
+import { useEffect, useState } from "react";
+import TransactionStatus from "./TransactionStatus";
+import Link from "next/link";
+import {BiLogoBitcoin} from 'react-icons/bi'
+const formSchema = z.object({
+  bitcoin: z.preprocess(
+    (args) => (args === "" ? undefined : args),
+    z.coerce
+      .number({ required_error: "Please enter aleast 2 digit numbers" })
+      .min(2, {
+        message: "The bitcoin count should be aleast 2 digit numbers",
+      })
+  ),
+});
 
 export default function Home() {
+  const [open, setOpen] = useState(false);
+
+  const form = useForm<z.infer<typeof formSchema>>({
+    resolver: zodResolver(formSchema),
+    defaultValues: {
+      // bitcoin: 10,
+    },
+  });
+
+  function onSubmit(values: z.infer<typeof formSchema>) {
+
+    console.log(values);
+    setOpen(prev=>!prev)
+  }
+
+  const [isVisible, setIsVisible] = useState(true);
+
+  useEffect(() => {
+    // Function to set isVisible to false after 5 seconds
+    let timeout:any;
+    if(open){
+console.log('now false');
+
+      timeout = setTimeout(() => {
+        setIsVisible(false);
+      }, 6000);
+    }
+
+
+    // Clear the timeout to prevent memory leaks
+    return () => {
+      if(!open){
+        clearTimeout(timeout);
+        setIsVisible(true)
+        console.log('now true');
+      }
+      
+    };
+  }, [open]); 
+
+
+
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 max-w-5xl w-full items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
-          Get started by editing&nbsp;
-          <code className="font-mono font-bold">app/page.tsx</code>
-        </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:h-auto lg:w-auto lg:bg-none">
-          <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
-          >
-            By{' '}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={100}
-              height={24}
-              priority
-            />
-          </a>
-        </div>
-      </div>
+    <div className="h-[100dvh] w-screen flex justify-center items-center flex-col p-8">
+      
+      <Lottie animationData={bitcoin} loop={true} className={`flex`} />
+      <Form {...form}>
+        <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+          <FormField
+            control={form.control}
+            name="bitcoin"
+            render={({ field }) => (
+              <FormItem>
+                <FormLabel>Buy bitcoin</FormLabel>
+                <FormControl>
+                  <Input
+                    placeholder="Enter amount here..."
+                    {...field}
+                    type="number"
+                  />
+                </FormControl>
+                <FormDescription>
+                  The bitcoin count should be aleast 2 digit number to 8 digit
+                  numbers
+                </FormDescription>
+                <FormMessage />
+              </FormItem>
+            )}
+          />
+          <Button className="space-x-1"><span>Buy now</span> <BiLogoBitcoin size={22}/></Button>
+        </form>
+      </Form>
 
-      <div className="relative flex place-items-center before:absolute before:h-[300px] before:w-[480px] before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-[240px] after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 before:lg:h-[360px] z-[-1]">
-        <Image
-          className="relative dark:drop-shadow-[0_0_0.3rem_#ffffff70] dark:invert"
-          src="/next.svg"
-          alt="Next.js Logo"
-          width={180}
-          height={37}
-          priority
-        />
-      </div>
+      <Dialog onOpenChange={setOpen} open={open}>
+        <DialogContent className="max-w-[320px] sm:max-w-[425px]">
+          <DialogHeader>
+            <DialogTitle>{`You are buying ${form.getValues().bitcoin} Bitcoins`} </DialogTitle>
+            <DialogDescription>
+            <TransactionStatus/>
+            </DialogDescription>
+          </DialogHeader>
+          <div className="w-full flex justify-center items-center h-60 ">
 
-      <div className="mb-32 grid text-center lg:max-w-5xl lg:w-full lg:mb-0 lg:grid-cols-4 lg:text-left">
-        <a
-          href="https://nextjs.org/docs?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Docs{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Find in-depth information about Next.js features and API.
-          </p>
-        </a>
+          <Lottie animationData={loading} loop={true} className={`${isVisible? `flex`: `hidden` } h-60 w-60`} />
+     
+          <Lottie animationData={success} loop={true} className={`${!isVisible? `flex`: `hidden` } object-cover h-60 w-60`} />
+      
+        
+          </div>
+          <DialogFooter className="w-full flex">
+            <DialogClose asChild className="w-full">
+            <Button  className="w-full">Close</Button>
+            </DialogClose>
+         
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+<div className="absolute bottom-10">
+<TwitterFollowButton
+    screenName={'asitdixitt'}
+  />
+ 
+</div>
 
-        <a
-          href="https://nextjs.org/learn?utm_source=create-next-app&utm_medium=appdir-template-tw&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Learn{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Learn about Next.js in an interactive course with&nbsp;quizzes!
-          </p>
-        </a>
+<p className="absolute bottom-[8px] space-x-1 ">
 
-        <a
-          href="https://vercel.com/templates?framework=next.js&utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Templates{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Explore the Next.js 13 playground.
-          </p>
-        </a>
+  <span className="text-sm">
+  Currently building
+  </span>
+     <Link href={'https://buildrbase.com/'} className="text-blue-600 text-md font-medium underline">
+      
+      buildrbase.com
+      
+      </Link>
+  </p>
 
-        <a
-          href="https://vercel.com/new?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-          className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          <h2 className={`mb-3 text-2xl font-semibold`}>
-            Deploy{' '}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className={`m-0 max-w-[30ch] text-sm opacity-50`}>
-            Instantly deploy your Next.js site to a shareable URL with Vercel.
-          </p>
-        </a>
-      </div>
-    </main>
-  )
+    </div>
+  );
 }
