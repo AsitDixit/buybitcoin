@@ -46,7 +46,7 @@ import Link from "next/link";
 import { BiLogoBitcoin } from "react-icons/bi";
 const formSchema = z.object({
   bitcoin: z
-    .number({ required_error: "Please enter aleast 1 digit numbers" })
+    .number({ required_error: "Please enter aleast 1 digit number" })
     .min(1, {
       message: "You should buy aleast 1 bitcon to proceed this transaction",
     }),
